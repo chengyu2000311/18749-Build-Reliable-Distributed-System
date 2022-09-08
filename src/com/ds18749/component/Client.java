@@ -1,8 +1,10 @@
 package com.ds18749.component;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Random;
+import java.util.logging.*;
 
 public class Client{
     private final String[] statesString = new String[]{"plus", "minus"};
@@ -10,6 +12,7 @@ public class Client{
     public static final String serverIP = "127.0.0.1";
     public static final int serverPortNumber = 4321;
     public static int clientStateCounter = 0;
+    private Logger m_Logger;
 
     public Client(int id) {
         this.clientId = id;
@@ -25,17 +28,14 @@ public class Client{
         }
     }
 
-    private String getRandomMsg() {
-        Random r = new Random();
-        int ind = r.nextInt(2);
-        clientStateCounter += 1;
-        return "CLIENT" + clientId + "_DATA" + " " + clientStateCounter;
-    }
-
     public void startToSend() {
         while (true) {
-            String randomMsg = getRandomMsg();
-            sendMsg(randomMsg);
+            clientStateCounter += 1;
+            String messageString = "CLIENT" + clientId + "_DATA" + " " + clientStateCounter;
+            sendMsg(messageString);
+            listenToHeartBeatAnswerFromServer();
+            // Log to console on the heartbeat message sent.
+            System.out.printf("Client%d sent out message to Server1: %s\n", clientId, messageString);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -43,6 +43,41 @@ public class Client{
             }
         }
     }
+
+    private boolean listenToHeartBeatAnswerFromServer() {
+        StringBuilder rawStringReceived = new StringBuilder();
+
+        // Accept the socket and print received message from clients.
+        try {
+            Socket clientSocket_ = new Socket(serverIP, serverPortNumber);
+            InputStream in = clientSocket_.getInputStream();
+
+            // Store socket instream.
+            for (int c = in.read(); c != Server.END_CHAR; c = in.read()) {
+                if(c ==-1)
+                    break;
+                rawStringReceived.append((char) c);
+            }
+            
+            String receivedMessage = rawStringReceived.toString();
+            String[] received = receivedMessage.toString().split(" ", 2);
+
+            if (isMessageRespondFromServer(received[0])) {
+                System.out.printf("Received message answered from Server1: %s\n", receivedMessage);
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            m_Logger.warning("LFD1 does not hear Heart Beat Answer from the Server1. Stop sending heart beats...\n");
+            // e.printStackTrace();
+        }
+        return true;
+    }
+
+    private boolean isMessageRespondFromServer(String serverMessage) {
+        return serverMessage.equals(Server.MessageType.SERVER1_MESSAGE_ANSWER.name());
+    }
+
 
     public static void main(String[] args) {
         int clientId = Integer.parseInt(args[0]);

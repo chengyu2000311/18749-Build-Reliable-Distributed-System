@@ -17,6 +17,7 @@ public class Server{
     public static final String serverIP = "127.0.0.1";
     public static final int serverPortNumber = 4321;
     private ServerSocket m_ServerSocket; 
+    private ServerState m_ServerState;
 
     enum MessageType {
         LFD1_HEART_BEAT,
@@ -25,6 +26,12 @@ public class Server{
         CLIENT0_DATA,
         CLIENT1_DATA,
         CLIENT2_DATA,
+    };
+
+    enum ServerState {
+        RED,
+        YELLOW,
+        BLUE
     };
 
     public Server(String IPAddress, int portNumber) {
@@ -66,23 +73,14 @@ public class Server{
                 rawStringReceived.append((char) c);
             }
             
-            String receivedMessage = rawStringReceived.toString();
+            
             // System.out.printf("Received: %s", receivedMessage);
 
-            String[] received = receivedMessage.toString().split(" ", 2);
-
-            if (isLFDHeartBeat(received[0])) {
-                System.out.printf("Heartbeat received from LFD1: %s\n", receivedMessage);
-                answerHeartBeat();
-            } else if (isClient0Message(received[0])) {
-                System.out.printf("Message received from client 0: %s\n", received[1]);
-            } else if (isClient1Message(received[0])) {
-                System.out.printf("Message received from client 1: %s\n", received[1]);
-            } else if (isClient2Message(received[0])) {
-                System.out.printf("Message received from client 2: %s\n", received[1]);
-            }
+            String[] received = rawStringReceived.toString().split(" ", 2);
+            MessageType receivedMessageType = MessageType.valueOf(received[0]);
+            String receivedMessageContent = received[1];
+            answerToPeripheral(receivedMessageType, receivedMessageContent);
             /*
-            
             if (sign.equals("plus")) {
                 record.put(idNum, record.getOrDefault(idNum, 0) + 1);
             } else {
@@ -96,44 +94,40 @@ public class Server{
 
     }
 
-    private boolean isLFDHeartBeat(String receivedMessage) {
-        return (receivedMessage.equals(MessageType.LFD1_HEART_BEAT.name()));
-    }
-    
-    private boolean isClient0Message(String receivedMessage) {
-        return receivedMessage.equals(MessageType.CLIENT0_DATA.name());
-    }
-
-    private boolean isClient1Message(String receivedMessage) {
-        return receivedMessage.equals(MessageType.CLIENT1_DATA.name());
-    }
-    
-    private boolean isClient2Message(String receivedMessage) {
-        return receivedMessage.equals(MessageType.CLIENT2_DATA.name());
-    }
-
-    private void answerHeartBeat() {
+    private void answerToPeripheral(MessageType receivedMessageType, String receivedMessageContent) {
+        String serverReplyMessage = "";
         try (Socket serverSocket = m_ServerSocket.accept()){
             OutputStream out = serverSocket.getOutputStream();
-            String msg = "SERVER1_HEART_BEAT_ANSWER" + Server.END_CHAR;
-            out.write(msg.getBytes());
-            System.out.printf("Heart Beat Answer send to LFD1 from Server1: %s\n", msg);
+            if (receivedMessageType == MessageType.LFD1_HEART_BEAT) {
+                System.out.printf("Server1 received Heart Beat from LFD1: %s\n", receivedMessageContent);
+                serverReplyMessage = MessageType.SERVER1_HEART_BEAT_ANSWER.name() + Server.END_CHAR;
+                System.out.printf("Heart Beat Answer sent to LFD1 from Server1: %s\n", serverReplyMessage);
+            } else if (receivedMessageType == MessageType.CLIENT0_DATA) {
+                m_ServerState = ServerState.RED;
+                System.out.printf("Server1 received message from Client0: %s\n", receivedMessageContent);
+                System.out.printf("Server1 current state: %s\n", m_ServerState.name());
+                serverReplyMessage = MessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
+                System.out.printf("Message reply sent to Client0 from Server1: %s\n", serverReplyMessage);
+            } else if (receivedMessageType == MessageType.CLIENT0_DATA) {
+                m_ServerState = ServerState.YELLOW;
+                System.out.printf("Server1 received message from Client1: %s\n", receivedMessageContent);
+                System.out.printf("Server1 current state: %s\n", m_ServerState.name());
+                serverReplyMessage = MessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
+                System.out.printf("Message reply sent to Client1 from Server1: %s\n", serverReplyMessage);
+            } else if (receivedMessageType == MessageType.CLIENT0_DATA) {
+                m_ServerState = ServerState.BLUE;
+                System.out.printf("Server1 received message from Client2: %s\n", receivedMessageContent);
+                System.out.printf("Server1 current state: %s\n", m_ServerState.name());
+                serverReplyMessage = MessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
+                System.out.printf("Message reply sent to Client2 from Server1: %s\n", serverReplyMessage);
+            }
+            
+            out.write(serverReplyMessage.getBytes());
         } catch (Exception e){
             e.printStackTrace();
         }
     }
-
-    private void answerClientMessage() {
-        try (Socket serverSocket = m_ServerSocket.accept()){
-            OutputStream out = serverSocket.getOutputStream();
-            String msg = "SERVER1_MESSAGE_ANSWER" + Server.END_CHAR;
-            out.write(msg.getBytes());
-            System.out.printf("Heart Beat Answer send to LFD1 from Server1: %s\n", msg);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
+    
     /**
      * Server program entrance.
      * @param args
