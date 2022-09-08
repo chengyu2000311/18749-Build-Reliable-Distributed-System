@@ -5,13 +5,14 @@ import java.net.Socket;
 import java.util.Random;
 
 public class Client{
-    private final String[] messages = new String[]{"plus", "minus"};
-    private final int id;
+    private final String[] statesString = new String[]{"plus", "minus"};
+    private final int clientId; 
     public static final String serverIP = "127.0.0.1";
     public static final int serverPortNumber = 4321;
+    public static int clientStateCounter = 0;
 
     public Client(int id) {
-        this.id = id;
+        this.clientId = id;
     }
 
     private void sendMsg(String msg) {
@@ -26,10 +27,10 @@ public class Client{
 
     private String getRandomMsg() {
         Random r = new Random();
-        int ind = r.nextInt(2) ;
-        return messages[ind] + " " + id;
+        int ind = r.nextInt(2);
+        clientStateCounter += 1;
+        return "CLIENT" + clientId + "_DATA" + " " + clientStateCounter;
     }
-
 
     public void startToSend() {
         while (true) {
@@ -44,8 +45,9 @@ public class Client{
     }
 
     public static void main(String[] args) {
-        int id = Integer.parseInt(args[0]);
-        Client m_client = new Client(id);
+        int clientId = Integer.parseInt(args[0]);
+        Client m_client = new Client(clientId);
+        System.out.printf("Client%d has been launched at %s:%d\n", clientId, serverIP, serverPortNumber);
         m_client.startToSend();
     }
 }
