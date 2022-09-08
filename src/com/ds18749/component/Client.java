@@ -4,18 +4,22 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Random;
 
-public class Client implements Runnable {
+public class Client{
     private final String[] messages = new String[]{"plus", "minus"};
     private final int id;
+    public static final String serverIP = "127.0.0.1";
+    public static final int serverPortNumber = 4321;
+
     public Client(int id) {
         this.id = id;
     }
+
     private void sendMsg(String msg) {
-        msg = msg+ Server.END_CHAR;
-        try (Socket client = new Socket(Configure.serverIP, Configure.serverPortNumber)){
+        msg = msg + Server.END_CHAR;
+        try (Socket client = new Socket(serverIP, serverPortNumber)){
             OutputStream out = client.getOutputStream();
             out.write(msg.getBytes());
-        }catch (Exception e){
+        } catch (Exception e){
             e.printStackTrace();
         }
     }
@@ -27,7 +31,7 @@ public class Client implements Runnable {
     }
 
 
-    public void startSend() {
+    public void startToSend() {
         while (true) {
             String randomMsg = getRandomMsg();
             sendMsg(randomMsg);
@@ -39,8 +43,9 @@ public class Client implements Runnable {
         }
     }
 
-    @Override
-    public void run() {
-        startSend();
+    public static void main(String[] args) {
+        int id = Integer.parseInt(args[0]);
+        Client m_client = new Client(id);
+        m_client.startToSend();
     }
 }
