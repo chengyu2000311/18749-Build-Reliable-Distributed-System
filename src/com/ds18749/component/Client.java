@@ -3,7 +3,6 @@ package com.ds18749.component;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Random;
 import java.util.logging.*;
 
 public class Client{
@@ -16,6 +15,7 @@ public class Client{
 
     public Client(int id) {
         this.clientId = id;
+        this.m_Logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }
 
     private void sendMsg(String msg) {
@@ -31,11 +31,11 @@ public class Client{
     public void startToSend() {
         while (true) {
             clientStateCounter += 1;
-            String messageString = "CLIENT" + clientId + "_DATA" + " " + clientStateCounter;
+            String messageString = "CLIENT" + clientId + "_DATA" + " " + Server.END_CHAR;
             sendMsg(messageString);
             listenToHeartBeatAnswerFromServer();
             // Log to console on the heartbeat message sent.
-            System.out.printf("Client%d sent out message to Server1: %s\n", clientId, messageString);
+            m_Logger.log(Level.INFO, String.format("Client%d sent out message to Server1: %s", clientId, messageString));
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -63,7 +63,7 @@ public class Client{
             String[] received = receivedMessage.toString().split(" ", 2);
 
             if (isMessageRespondFromServer(received[0])) {
-                System.out.printf("Received message answered from Server1: %s\n", receivedMessage);
+                m_Logger.log(Level.INFO, String.format("Received message answered from Server1: %s\n", receivedMessage));
             } else {
                 return false;
             }

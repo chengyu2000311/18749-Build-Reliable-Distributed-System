@@ -8,14 +8,14 @@ targets:
 runserver:
 	java com.ds18749.component.Server
 
-runclient0:
-	java com.ds18749.component.Client 0
-
 runclient1:
 	java com.ds18749.component.Client 1
 
 runclient2:
 	java com.ds18749.component.Client 2
+
+runclient3:
+	java com.ds18749.component.Client 3
 
 runlfd:
 	java com.ds18749.component.LocalFaultDetector
