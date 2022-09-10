@@ -11,5 +11,5 @@
     $ make 
 - Start the server:
     $ make runserver
-- Start the client 0:
-    $ make runclient 0.
+- Start the client 1:
+    $ make runclient1.
