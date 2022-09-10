@@ -10,15 +10,22 @@ import java.util.logging.*;
 
 public class Server{
     public static final char END_CHAR = '#';
-    private final String IPAddress;
-    private final int portNumber;
     public static final String serverIP = "127.0.0.1";
     public static final int serverPortNumber = 4321;
+
+    private final String IPAddress;
+    private final int portNumber;
     private ServerSocket m_ServerSocket; 
-    private ServerState m_ServerState;
+    private eServerState m_eServerState;
     private Logger m_Logger;
 
-    enum MessageType {
+    /**
+     * Message Type enum for the server to identify what kind of message it has received.
+     * It is encoded as part of the message, for EXAMPLE:
+     *      "CLIENT1_DATA Hello World!#"
+     *      "LFD1_HEART_BEAT #" ...etc.
+     */
+    enum eMessageType {
         LFD1_HEART_BEAT,
         SERVER1_HEART_BEAT_ANSWER,
         SERVER1_MESSAGE_ANSWER,
@@ -27,30 +34,41 @@ public class Server{
         CLIENT3_DATA,
     };
 
-    enum ServerState {
+    /**
+     *  Server State. The server state will changed to RED, YELLOW, and BLUE 
+     *      when it receives message from S1, S2, S3 respectively.
+     */
+    enum eServerState {
         RED,
         YELLOW,
         BLUE
     };
 
-    public Server(String IPAddress, int portNumber) {
-        this.IPAddress = IPAddress;
+    /**
+     * Server default constructor.
+     * @param ipAddress
+     * @param portNumber
+     */
+    public Server(String ipAddress, int portNumber) {
+        this.IPAddress = ipAddress;
         this.portNumber = portNumber;
         this.m_Logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }
 
+    /**
+     * Server starts service.
+     */
     public void startService() {
         try {
+            /* Socket construction. */
             InetAddress serverAddress = InetAddress.getByName(IPAddress);
-            try {
-                m_ServerSocket = new ServerSocket(portNumber, 10, serverAddress);
-                while (true) {
-                    receiveMessageFromSocket();            
-                }
-            } catch (Exception e) { // catch on service.accept()
-                e.printStackTrace();
+            m_ServerSocket = new ServerSocket(portNumber, 10, serverAddress);
+
+            /* Inifite loop, listen to the socket and receive any messages. */
+            while (true) {
+                receiveMessageFromSocket();            
             }
-        } catch (UnknownHostException e) { // catch on new serversockect.
+        } catch (Exception e) { // catch on new serversockect.
             e.printStackTrace();
         }
     }
@@ -62,54 +80,64 @@ public class Server{
     private void receiveMessageFromSocket() {
         StringBuilder rawStringReceived = new StringBuilder();
 
-        // Accept the socket and print received message from clients.
+        /* Accept the socket and print received message from clients. */
         try(Socket serverSocket = this.m_ServerSocket.accept()) {
             InputStream in = serverSocket.getInputStream();
 
-            // Store socket instream.
+            /* Record socket insteam. */
             for (int c = in.read(); c != END_CHAR; c = in.read()) {
-                if(c ==-1)
-                    break;
                 rawStringReceived.append((char) c);
             }
-                        String[] received = rawStringReceived.toString().split(" ", 2);
-            MessageType receivedMessageType = MessageType.valueOf(received[0]);
+            
+            /* Parse the message received. */
+            String[] received = rawStringReceived.toString().split(" ", 2);
+            eMessageType receivedeMessageType = eMessageType.valueOf(received[0]);
             String receivedMessageContent = received[1];
-            answerToPeripheral(receivedMessageType, receivedMessageContent);
+
+            /* Answer to either Clients or the LFD. */
+            answerToPeripheral(receivedeMessageType, receivedMessageContent);
         }catch (Exception e){
             e.printStackTrace();
         }
 
     }
 
-    private void answerToPeripheral(MessageType receivedMessageType, String receivedMessageContent) {
+    /**
+     * Respond to the LFD / server / client.
+     * @param receivedeMessageType
+     * @param receivedMessageContent
+     */
+    private void answerToPeripheral(eMessageType receivedeMessageType, String receivedMessageContent) {
         String serverReplyMessage = "";
         try (Socket serverSocket = m_ServerSocket.accept()){
             OutputStream out = serverSocket.getOutputStream();
-            if (receivedMessageType == MessageType.LFD1_HEART_BEAT) {
-                m_Logger.log(Level.INFO, "S1 received Heart Beat from LFD1: {0}\n", receivedMessageContent);
-                serverReplyMessage = MessageType.SERVER1_HEART_BEAT_ANSWER.name() + Server.END_CHAR;
+            if (receivedeMessageType == eMessageType.LFD1_HEART_BEAT) {
+                m_Logger.log(Level.INFO, "S1 received Heart Beat from LFD1: {0}", receivedMessageContent);
+                serverReplyMessage = eMessageType.SERVER1_HEART_BEAT_ANSWER.name() + Server.END_CHAR;
                 m_Logger.log(Level.INFO, "Heart Beat Answer sent to LFD1 from S1: {0}\n", serverReplyMessage);
-            } else if (receivedMessageType == MessageType.CLIENT1_DATA) {
-                m_ServerState = ServerState.RED;
-                m_Logger.log(Level.INFO, "S1 received message from C1: {0}\n", receivedMessageContent);
-                m_Logger.log(Level.INFO, "S1 current state: {}\n", m_ServerState.name());
-                serverReplyMessage = MessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
+            } else if (receivedeMessageType == eMessageType.CLIENT1_DATA) {
+                /* Change server state to RED. */
+                m_eServerState = eServerState.RED;
+                m_Logger.log(Level.INFO, "S1 received message from C1: {0}", receivedMessageContent);
+                m_Logger.log(Level.INFO, "S1 current state: {0}", m_eServerState.name());
+                serverReplyMessage = eMessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
                 m_Logger.log(Level.INFO, "Message reply sent to C1 from S1: {0}\n", serverReplyMessage);
-            } else if (receivedMessageType == MessageType.CLIENT2_DATA) {
-                m_ServerState = ServerState.YELLOW;
-                m_Logger.log(Level.INFO, "S1 received message from C2: {0}\n", receivedMessageContent);
-                m_Logger.log(Level.INFO, "S1 current state: {}\n", m_ServerState.name());
-                serverReplyMessage = MessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
+            } else if (receivedeMessageType == eMessageType.CLIENT2_DATA) {
+                /* Change server state to YELLOW. */
+                m_eServerState = eServerState.YELLOW;
+                m_Logger.log(Level.INFO, "S1 received message from C2: {0}", receivedMessageContent);
+                m_Logger.log(Level.INFO, "S1 current state: {0}", m_eServerState.name());
+                serverReplyMessage = eMessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
                 m_Logger.log(Level.INFO, "Message reply sent to C2 from S1: {0}\n", serverReplyMessage);
-            } else if (receivedMessageType == MessageType.CLIENT3_DATA) {
-                m_ServerState = ServerState.BLUE;
-                m_Logger.log(Level.INFO, "S1 received message from C3: {0}\n", receivedMessageContent);
-                m_Logger.log(Level.INFO, "S1 current state: {0}\n", m_ServerState.name());
-                serverReplyMessage = MessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
+            } else if (receivedeMessageType == eMessageType.CLIENT3_DATA) {
+                /* Change server state to BLUE. */
+                m_eServerState = eServerState.BLUE;
+                m_Logger.log(Level.INFO, "S1 received message from C3: {0}", receivedMessageContent);
+                m_Logger.log(Level.INFO, "S1 current state: {0}", m_eServerState.name());
+                serverReplyMessage = eMessageType.SERVER1_MESSAGE_ANSWER.name() + Server.END_CHAR;
                 m_Logger.log(Level.INFO, "Message reply sent to C3 from S1: {0}\n", serverReplyMessage);
             }
-            
+            /* Write the server reply message to outstream. */
             out.write(serverReplyMessage.getBytes());
         } catch (Exception e){
             e.printStackTrace();
@@ -121,7 +149,7 @@ public class Server{
      * @param args
      */
     public static void main(String[] args) {
-        System.out.printf("Server replica S1 has been launched at %s:%d\n", serverIP, serverPortNumber);
+        System.out.printf("Server replica S1 has been launched at %s:%d\n\n", serverIP, serverPortNumber);
         Server m_server = new Server(serverIP, serverPortNumber);
         m_server.startService();
     }
