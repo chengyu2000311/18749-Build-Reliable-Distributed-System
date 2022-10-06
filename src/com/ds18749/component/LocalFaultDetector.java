@@ -10,7 +10,7 @@ import java.util.logging.*;
 import com.ds18749.component.Server.eMessageType;
 
 public class LocalFaultDetector {
-    public static final String serverIP = "127.0.0.1";
+    public static final String serverIP = "10.0.0.145";
     public static final int serverPortNumber = 4321;
 
     private Timer m_heartBeatTimer = null;
@@ -102,7 +102,8 @@ public class LocalFaultDetector {
      * @param args
      */
     public static void main(String[] args) {
-        LocalFaultDetector m_localFaultDetector = new LocalFaultDetector(0.5);
+	double freq = Double.parseDouble(args[0]);
+        LocalFaultDetector m_localFaultDetector = new LocalFaultDetector(freq);
         System.out.printf("Localfault detector LFD1 has been launched at %s:%d\n", serverIP, serverPortNumber);
     }
 

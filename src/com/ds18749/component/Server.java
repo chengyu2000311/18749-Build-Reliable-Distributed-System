@@ -10,7 +10,7 @@ import java.util.logging.*;
 
 public class Server{
     public static final char END_CHAR = '#';
-    public static final String serverIP = "127.0.0.1";
+    public static final String serverIP = "10.0.0.145";
     public static final int serverPortNumber = 4321;
 
     private final String IPAddress;
