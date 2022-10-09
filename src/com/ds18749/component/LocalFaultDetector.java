@@ -37,8 +37,8 @@ public class LocalFaultDetector {
     public LocalFaultDetector(int heartBeatFrequency, int id) {
         this.heartBeatFrequency = heartBeatFrequency;
         this.id = id;
-        this.myIP = String.format(myIP, id);
-        this.serverIP = String.format(serverIP, id);
+        this.myIP = String.format(myIP, id-1);
+        this.serverIP = String.format(serverIP, id-1);
         this.serverPortNumber = this.serverPortNumber * 10 + id;
         this.myPortNumber = this.myPortNumber * 10 + id;
         /* Initialize the logger. */
@@ -220,7 +220,7 @@ public class LocalFaultDetector {
         int id = Integer.parseInt(args[0]);
         LocalFaultDetector m_localFaultDetector = new LocalFaultDetector(2, id);
         m_localFaultDetector.start();
-        System.out.printf("LocalFault detector LFD1 has been launched at %s:%d\n", String.format(myIP, id), myPortNumber);
+        System.out.printf("LocalFault detector LFD1 has been launched at %s:%d\n", String.format(myIP, id-1), myPortNumber);
     }
 
 }

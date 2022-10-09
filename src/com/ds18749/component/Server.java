@@ -51,7 +51,7 @@ public class Server{
      */
     public Server(String ipAddress, int portNumber, int id) {
         this.id = id;
-        this.IPAddress = String.format(ipAddress, id);
+        this.IPAddress = String.format(ipAddress, id-1);
         this.portNumber = portNumber * 10 + id;
         this.m_Logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }
