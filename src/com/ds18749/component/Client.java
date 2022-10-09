@@ -102,6 +102,8 @@ public class Client{
         } catch (Exception e) {
             if (!(e instanceof ConnectException)) {
                 e.printStackTrace();
+            } else {
+                return false;
             }
         }
         return true;
