@@ -92,10 +92,10 @@ public class GlobalFaultDetector {
         int id = Integer.parseInt(String.valueOf(received.charAt(received.length()-1)));
         if (received.contains("add replica")) {
             memberships.add("S" + id);
-            m_Logger.log(Level.INFO, String.format("add GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
+            m_Logger.log(Level.INFO, String.format("GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         } else if (received.contains("delete replica")) {
             memberships.remove("S" + id);
-            m_Logger.log(Level.INFO, String.format("delete GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
+            m_Logger.log(Level.INFO, String.format("GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         }
 
     }
