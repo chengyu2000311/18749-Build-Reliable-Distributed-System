@@ -9,7 +9,7 @@ import java.util.logging.*;
 
 public class Server{
     public static final char END_CHAR = '#';
-    public static final String myIP = "127.0.0.1";
+    public static String myIP = "ece00%d.ece.local.cmu.edu";
     public static final int myPortNumber = 430;
 
     private final String IPAddress;
@@ -51,7 +51,7 @@ public class Server{
      */
     public Server(String ipAddress, int portNumber, int id) {
         this.id = id;
-        this.IPAddress = ipAddress;
+        this.IPAddress = String.format(ipAddress, id);
         this.portNumber = portNumber * 10 + id;
         this.m_Logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }
@@ -150,7 +150,7 @@ public class Server{
      */
     public static void main(String[] args) {
         int id = Integer.parseInt(args[0]);
-        System.out.printf("Server replica S1 has been launched at %s:%d\n\n", myIP, myPortNumber * 10 + id);
+        System.out.printf("Server replica S1 has been launched at %s:%d\n\n", String.format(myIP, id), myPortNumber * 10 + id);
         Server m_server = new Server(myIP, myPortNumber, id);
         m_server.startService();
     }

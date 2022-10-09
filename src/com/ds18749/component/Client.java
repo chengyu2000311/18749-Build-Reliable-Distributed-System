@@ -17,12 +17,12 @@ public class Client{
     public static int clientStateCounter = 0;
 
     private final int clientId; 
-    private Logger m_Logger;
+    private final Logger m_Logger;
     private int counter = 0;
     private List<IpPort> ServerIpPorts = Arrays.asList(
-            new IpPort("127.0.0.1", 4301),
-            new IpPort("127.0.0.1", 4302),
-            new IpPort("127.0.0.1", 4303)
+            new IpPort("ece000.ece.local.cmu.edu", 4301),
+            new IpPort("ece001.ece.local.cmu.edu", 4302),
+            new IpPort("ece002.ece.local.cmu.edu", 4303)
     );
 
     /**

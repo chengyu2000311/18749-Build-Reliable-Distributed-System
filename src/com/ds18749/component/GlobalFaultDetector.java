@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GlobalFaultDetector {
-    public static final String myIP = "127.0.0.1";
+    public static final String myIP = "ece004.ece.cmu.edu";
     public static final int myPortNumber = 4311;
 
     private ServerSocket m_ServerSocket;
@@ -33,9 +33,9 @@ public class GlobalFaultDetector {
     }
 
     private final List<IpPort> LFDIpPortS = Arrays.asList(
-            new IpPort("127.0.0.1", 4321),
-            new IpPort("127.0.0.1", 4322),
-            new IpPort("127.0.0.1", 4323)
+            new IpPort("ece000.ece.cmu.edu", 4321),
+            new IpPort("ece001.ece.cmu.edu", 4322),
+            new IpPort("ece003.ece.cmu.edu", 4323)
     );
 
     public GlobalFaultDetector(long heartBeatFrequency) {

@@ -14,7 +14,7 @@ import java.util.logging.*;
 public class LocalFaultDetector {
     public static final String serverIP = "127.0.0.1";
     public static int serverPortNumber = 430;
-    public static final String myIP = "127.0.0.1";
+    public static String myIP = "ece00%d.ece.cmu.edu";
     public static int myPortNumber = 432;
 
     private Timestamp lastHeartBeat;
@@ -37,6 +37,7 @@ public class LocalFaultDetector {
     public LocalFaultDetector(int heartBeatFrequency, int id) {
         this.heartBeatFrequency = heartBeatFrequency;
         this.id = id;
+        this.myIP = String.format(myIP, id);
         this.serverPortNumber = this.serverPortNumber * 10 + id;
         this.myPortNumber = this.myPortNumber * 10 + id;
         /* Initialize the logger. */
@@ -218,7 +219,7 @@ public class LocalFaultDetector {
         int id = Integer.parseInt(args[0]);
         LocalFaultDetector m_localFaultDetector = new LocalFaultDetector(2, id);
         m_localFaultDetector.start();
-        System.out.printf("LocalFault detector LFD1 has been launched at %s:%d\n", myIP, myPortNumber);
+        System.out.printf("LocalFault detector LFD1 has been launched at %s:%d\n", String.format(myIP, id), myPortNumber);
     }
 
 }
