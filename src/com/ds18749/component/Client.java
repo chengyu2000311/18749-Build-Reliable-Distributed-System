@@ -12,7 +12,7 @@ import java.util.logging.*;
 
 
 public class Client{
-    public static final String serverIP = "127.0.0.1";
+    public static final String serverIP = "ece004.ece.local.cmu.edu";
     public static final int serverPortNumber = 4321;
     public static int clientStateCounter = 0;
 

@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GlobalFaultDetector {
-    public static final String myIP = "ece004.ece.cmu.edu";
+    public static final String myIP = "ece004.ece.local.cmu.edu";
     public static final int myPortNumber = 4311;
 
     private ServerSocket m_ServerSocket;
