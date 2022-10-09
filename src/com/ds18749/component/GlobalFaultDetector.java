@@ -33,9 +33,9 @@ public class GlobalFaultDetector {
     }
 
     private final List<IpPort> LFDIpPortS = Arrays.asList(
-            new IpPort("ece000.ece.cmu.edu", 4321),
-            new IpPort("ece001.ece.cmu.edu", 4322),
-            new IpPort("ece003.ece.cmu.edu", 4323)
+            new IpPort("ece000.ece.local.cmu.edu", 4321),
+            new IpPort("ece001.ece.local.cmu.edu", 4322),
+            new IpPort("ece003.ece.local.cmu.edu", 4323)
     );
 
     public GlobalFaultDetector(long heartBeatFrequency) {
