@@ -1,8 +1,13 @@
 package com.ds18749.component;
 
+import util.IpPort;
+
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.*;
 
 
@@ -14,6 +19,11 @@ public class Client{
     private final int clientId; 
     private Logger m_Logger;
     private int counter = 0;
+    private List<IpPort> ServerIpPorts = Arrays.asList(
+            new IpPort("127.0.0.1", 4301),
+            new IpPort("127.0.0.1", 4302),
+            new IpPort("127.0.0.1", 4303)
+    );
 
     /**
      * Client default constructor.
@@ -30,28 +40,35 @@ public class Client{
     public void startSendingMessageToServer() {
         while (true) {
             clientStateCounter += 1;
-            String messageString = "CLIENT" + clientId + "_DATA" + " " + counter + Server.END_CHAR;
-            counter+=1;
+            boolean hasReceived = false;
+            for (int serverID=1; serverID<4; ++serverID) {
+                String messageString = "CLIENT" + clientId + "_DATA" + " " + counter + Server.END_CHAR;
+                counter += 1;
+                IpPort serverIpPort = ServerIpPorts.get(serverID-1);
+                /* Open socket and write to server. */
+                try (Socket client = new Socket(serverIpPort.IPAddress(), serverIpPort.portNumber())) {
+                    OutputStream out = client.getOutputStream();
+                    /* Log to console on the heartbeat message sent. */
+                    m_Logger.log(Level.INFO, String.format("Client%d sent out message to Server%d: %s", clientId, serverID, messageString));
+                    out.write(messageString.getBytes());
+                } catch (Exception e) {
+                    if (!(e instanceof ConnectException)) {
+                        e.printStackTrace();
+                    }
+                }
 
-            /* Open socket and write to server. */
-            try (Socket client = new Socket(serverIP, serverPortNumber)){
-                OutputStream out = client.getOutputStream();
-                out.write(messageString.getBytes());
-            } catch (Exception e){
-                e.printStackTrace();
-            }
 
-            /* Listen for response from the server. */
-            listenToMessageReponseFromServer();
+                /* Listen for response from the server. */
+                hasReceived = listenToMessageResponseFromServer(serverID, hasReceived);
 
-            /* Log to console on the heartbeat message sent. */
-            m_Logger.log(Level.INFO, String.format("Client%d sent out message to Server1: %s", clientId, messageString));
 
-            /* Send message every 1 second. */
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+
+                /* Send message every 2 second. */
+                try {
+                    Thread.sleep(2 * 1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -59,12 +76,13 @@ public class Client{
     /**
      * Listen to server's reponse to the message we (the client) send.
      */
-    private boolean listenToMessageReponseFromServer() {
+    private boolean listenToMessageResponseFromServer(int serverID, boolean hasReceived) {
         StringBuilder rawStringReceived = new StringBuilder();
 
         // Accept the socket and print received message from clients.
         try {
-            Socket clientSocket_= new Socket(serverIP, serverPortNumber);
+            IpPort serverIpPort = ServerIpPorts.get(serverID-1);
+            Socket clientSocket_= new Socket(serverIpPort.IPAddress(), serverIpPort.portNumber());
             InputStream in = clientSocket_.getInputStream();
 
             // Store socket instream.
@@ -75,15 +93,17 @@ public class Client{
             }
             
             String receivedMessage = rawStringReceived.toString();
-            String[] received = receivedMessage.toString().split(" ", 2);
+            String[] received = receivedMessage.split(" ", 2);
 
-            if (isMessageRespondFromServer(received[0])) {
+            if (isMessageRespondFromServer(received[0]) && !hasReceived) {
                 m_Logger.log(Level.INFO, String.format("Received message answered by Server1: %s\n", receivedMessage));
             } else {
-                return false;
+                m_Logger.log(Level.INFO, "Discard Duplicate Response");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            if (!(e instanceof ConnectException)) {
+                e.printStackTrace();
+            }
         }
         return true;
     }
@@ -94,7 +114,7 @@ public class Client{
      * @return
      */
     private boolean isMessageRespondFromServer(String serverMessage) {
-        return serverMessage.equals(Server.eMessageType.SERVER1_MESSAGE_ANSWER.name());
+        return true; // serverMessage.equals(Server.eMessageType.SERVER1_MESSAGE_ANSWER.name());
     }
 
 
