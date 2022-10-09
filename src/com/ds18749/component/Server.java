@@ -134,7 +134,7 @@ public class Server{
                 m_eServerState = eServerState.BLUE;
                 m_Logger.log(Level.INFO, String.format("S%d received message from C3: %s", id, receivedMessageContent));
                 m_Logger.log(Level.INFO, String.format("S%d current state: %s", id, m_eServerState.name()));
-                serverReplyMessage = String.format("Server%d_%s %d%c", id, eMessageType.HEART_BEAT_ANSWER.name(), id, Server.END_CHAR); ;
+                serverReplyMessage = String.format("Server%d_%s %d%c", id, eMessageType.MESSAGE_ANSWER.name(), id, Server.END_CHAR); ;
                 m_Logger.log(Level.INFO, String.format("Message reply sent to C3 from S%d: %s\n", id, serverReplyMessage));
             }
             /* Write the server reply message to outstream. */
