@@ -18,7 +18,6 @@ public class Client{
 
     private final int clientId; 
     private final Logger m_Logger;
-    private int counter = 0;
     private List<IpPort> ServerIpPorts = Arrays.asList(
             new IpPort("ece000.ece.local.cmu.edu", 4301),
             new IpPort("ece001.ece.local.cmu.edu", 4302),
@@ -42,8 +41,7 @@ public class Client{
             clientStateCounter += 1;
             boolean hasReceived = false;
             for (int serverID=1; serverID<4; ++serverID) {
-                String messageString = "CLIENT" + clientId + "_DATA" + " " + counter + Server.END_CHAR;
-                counter += 1;
+                String messageString = "CLIENT" + clientId + "_DATA" + " " + clientStateCounter + Server.END_CHAR;
                 IpPort serverIpPort = ServerIpPorts.get(serverID-1);
                 /* Open socket and write to server. */
                 try (Socket client = new Socket(serverIpPort.IPAddress(), serverIpPort.portNumber())) {
@@ -59,8 +57,7 @@ public class Client{
 
 
                 /* Listen for response from the server. */
-                hasReceived = listenToMessageResponseFromServer(serverID, hasReceived);
-
+                hasReceived = listenToMessageResponseFromServer(serverID, clientStateCounter, hasReceived);
 
 
                 /* Send message every 2 second. */
@@ -74,9 +71,9 @@ public class Client{
     }
 
     /**
-     * Listen to server's reponse to the message we (the client) send.
+     * Listen to server's response to the message we (the client) send.
      */
-    private boolean listenToMessageResponseFromServer(int serverID, boolean hasReceived) {
+    private boolean listenToMessageResponseFromServer(int serverID, int clientStateCounter, boolean hasReceived) {
         StringBuilder rawStringReceived = new StringBuilder();
 
         // Accept the socket and print received message from clients.
@@ -96,9 +93,9 @@ public class Client{
             String[] received = receivedMessage.split(" ", 2);
 
             if (isMessageRespondFromServer(received[0]) && !hasReceived) {
-                m_Logger.log(Level.INFO, String.format("Received message answered by Server1: %s\n", receivedMessage));
+                m_Logger.log(Level.INFO, String.format("Received message answered by Server%d: %s\n", serverID, receivedMessage));
             } else {
-                m_Logger.log(Level.INFO, "Discard Duplicate Response");
+                m_Logger.log(Level.INFO, String.format("request_num %d: Discarded duplicate reply from S%d.", clientStateCounter, serverID));
             }
         } catch (Exception e) {
             if (!(e instanceof ConnectException)) {
@@ -114,7 +111,7 @@ public class Client{
      * @return
      */
     private boolean isMessageRespondFromServer(String serverMessage) {
-        return true; // serverMessage.equals(Server.eMessageType.SERVER1_MESSAGE_ANSWER.name());
+        return serverMessage.contains(Server.eMessageType.MESSAGE_ANSWER.name());
     }
 
 
