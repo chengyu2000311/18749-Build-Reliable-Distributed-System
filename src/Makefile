@@ -5,20 +5,18 @@ targets:
 
 .PHONY: runserver runclient0 runclient1 runclient2 clean
 
+rungfd:
+	java com.ds18749.component.GlobalFaultDetector
+
 runserver:
-	java com.ds18749.component.Server
+	java com.ds18749.component.Server $(id)
 
-runclient1:
-	java com.ds18749.component.Client 1
 
-runclient2:
-	java com.ds18749.component.Client 2
-
-runclient3:
-	java com.ds18749.component.Client 3
+runclient:
+	java com.ds18749.component.Client $(id)
 
 runlfd:
-	java com.ds18749.component.LocalFaultDetector
+	java com.ds18749.component.LocalFaultDetector $(id)
 
 install-jdk:
 	sudo apt install default-jdk
