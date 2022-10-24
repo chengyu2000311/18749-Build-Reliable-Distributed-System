@@ -72,7 +72,9 @@ public class LocalFaultDetector {
         }
     }
 
-
+    /**
+     * Check if timeout occurs
+     */
     private void checkTimeout() {
         while (true) {
             lastHeartBeatLock.lock();
@@ -162,6 +164,11 @@ public class LocalFaultDetector {
         }
     }
 
+    /**
+     * @param out
+     * @param received
+     * answer based on what is recceived
+     */
     private void answerToPeripheral(OutputStream out, String received) {
         if (received.equals(GlobalFaultDetector.eMessageType.GDB_HEART_BEAT.name())) {
             try {
@@ -172,6 +179,9 @@ public class LocalFaultDetector {
         }
     }
 
+    /**
+     * Register member with GFD
+     */
     private void registerMember() {
         /* Example: LFD1_HEART_BEAT */
         String msg = String.format("LFD%d: add replica S%d%c", id, id, Server.END_CHAR);
@@ -188,6 +198,9 @@ public class LocalFaultDetector {
         }
     }
 
+    /**
+     * Deregister member with GDF
+     */
     private void deregisterMember() {
         /* Example: LFD1_HEART_BEAT */
         String msg = String.format("LFD%d: delete replica S%d%c", id, id, Server.END_CHAR);
@@ -204,6 +217,9 @@ public class LocalFaultDetector {
         }
     }
 
+    /**
+     * continously listen to heartbeat
+     */
     private void listenToHeartBeatFromGDB() {
         while (true) {
             listenToHeartBeatAnswerFromGFD();

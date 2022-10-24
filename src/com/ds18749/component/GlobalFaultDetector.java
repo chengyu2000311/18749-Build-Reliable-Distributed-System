@@ -45,6 +45,9 @@ public class GlobalFaultDetector {
         this.start();
     }
 
+    /**
+     * Check if timeout occurs
+     */
     private void checkTimeout() {
         while (true) {
             lastHearBeatLock.lock();
@@ -65,6 +68,9 @@ public class GlobalFaultDetector {
         }
     }
 
+    /**
+     * continuing listen to message from other LFD
+     */
     private void listenMessage() {
         while (true) {
             StringBuilder rawStringReceived = new StringBuilder();
@@ -88,6 +94,10 @@ public class GlobalFaultDetector {
         }
     }
 
+    /**
+     * @param received
+     * update membership based on what is received
+     */
     private void updateState(String received) {
         int id = Integer.parseInt(String.valueOf(received.charAt(received.length()-1)));
         if (received.contains("add replica")) {
@@ -100,6 +110,9 @@ public class GlobalFaultDetector {
 
     }
 
+    /**
+     * start hearbeat with other LFD
+     */
     private void start() {
         /* Setup timer for sending GFD heartbeat. */
         m_Logger.log(Level.INFO, "GFD: 0 members");
@@ -127,6 +140,9 @@ public class GlobalFaultDetector {
         }
     }
 
+    /**
+     * send heartbeats to all other LFDs
+     */
     private void sendHeartBeat() {
         for (int id=1; id<4; ++id) {
             /* Example: GDB_HEART_BEAT */

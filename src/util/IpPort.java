@@ -1,5 +1,8 @@
 package util;
 
+/**
+ * Just a record for IP address and Port Number
+ */
 public class IpPort {
     private String IPAddress;
     private int portNumber;
