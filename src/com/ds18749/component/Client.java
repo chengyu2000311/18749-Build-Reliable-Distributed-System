@@ -12,7 +12,7 @@ import java.util.logging.*;
 
 
 public class Client{
-    public static final String serverIP = "127.0.0.1";
+    public static final String serverIP = "ece003.ece.local.cmu.edu";
     public static final int serverPortNumber = 4321;
     public static int clientStateCounter = 0;
 
@@ -20,9 +20,9 @@ public class Client{
     private Logger m_Logger;
     private int counter = 0;
     private List<IpPort> ServerIpPorts = Arrays.asList(
-            new IpPort("127.0.0.1", 4301),
-            new IpPort("127.0.0.1", 4302),
-            new IpPort("127.0.0.1", 4303)
+            new IpPort("ece000.ece.local.cmu.edu", 4301),
+            new IpPort("ece001.ece.local.cmu.edu", 4302),
+            new IpPort("ece002.ece.local.cmu.edu", 4303)
     );
 
     /**
@@ -41,35 +41,36 @@ public class Client{
         while (true) {
             clientStateCounter += 1;
             boolean hasReceived = false;
-            for (int serverID=1; serverID<4; ++serverID) {
-                String messageString = "CLIENT" + clientId + "_DATA" + " " + counter + Server.END_CHAR;
-                counter += 1;
-                IpPort serverIpPort = ServerIpPorts.get(serverID-1);
-                /* Open socket and write to server. */
-                try (Socket client = new Socket(serverIpPort.IPAddress(), serverIpPort.portNumber())) {
-                    OutputStream out = client.getOutputStream();
-                    /* Log to console on the heartbeat message sent. */
-                    m_Logger.log(Level.INFO, String.format("Client%d sent out message to Server%d: %s", clientId, serverID, messageString));
-                    out.write(messageString.getBytes());
-                } catch (Exception e) {
-                    if (!(e instanceof ConnectException)) {
-                        e.printStackTrace();
-                    }
-                }
-
-
-                /* Listen for response from the server. */
-                hasReceived = listenToMessageResponseFromServer(serverID, hasReceived);
-
-
-
-                /* Send message every 2 second. */
-                try {
-                    Thread.sleep(2 * 1000);
-                } catch (InterruptedException e) {
+            // for (int serverID=1; serverID<4; ++serverID) {
+            int serverID = 1;
+            String messageString = "CLIENT" + clientId + "_DATA" + " " + counter + Server.END_CHAR;
+            counter += 1;
+            IpPort serverIpPort = ServerIpPorts.get(serverID-1);
+            /* Open socket and write to server. */
+            try (Socket client = new Socket(serverIpPort.IPAddress(), serverIpPort.portNumber())) {
+                OutputStream out = client.getOutputStream();
+                /* Log to console on the heartbeat message sent. */
+                m_Logger.log(Level.INFO, String.format("Client%d sent out message to Server%d: %s", clientId, serverID, messageString));
+                out.write(messageString.getBytes());
+            } catch (Exception e) {
+                if (!(e instanceof ConnectException)) {
                     e.printStackTrace();
                 }
             }
+
+
+            /* Listen for response from the server. */
+            hasReceived = listenToMessageResponseFromServer(serverID, hasReceived);
+
+
+
+            /* Send message every 2 second. */
+            try {
+                Thread.sleep(2 * 1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // }
         }
     }
 

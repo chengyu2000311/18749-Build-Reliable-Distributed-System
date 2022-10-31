@@ -28,3 +28,8 @@
   $ make rungfd
 - Start the local fault detector with id:
   $ make runlfd id=1
+
+## Milestone 3
+- Client now only send to S1 by default
+- S1 sends checkpoints to S2 and S3
+- To compile: same as above
