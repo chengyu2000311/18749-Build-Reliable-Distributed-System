@@ -12,9 +12,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.*;
 
 public class LocalFaultDetector {
-    public static final String serverIP = "127.0.0.1";
+    public static String serverIP = "ece00%d.ece.local.cmu.edu";
     public static int serverPortNumber = 430;
-    public static final String myIP = "127.0.0.1";
+    public static String myIP = "ece00%d.ece.local.cmu.edu";
     public static int myPortNumber = 432;
 
     private Timestamp lastHeartBeat;
@@ -37,6 +37,8 @@ public class LocalFaultDetector {
     public LocalFaultDetector(int heartBeatFrequency, int id) {
         this.heartBeatFrequency = heartBeatFrequency;
         this.id = id;
+        this.myIP = String.format(myIP, id-1);
+        this.serverIP = String.format(serverIP, id-1);
         this.serverPortNumber = this.serverPortNumber * 10 + id;
         this.myPortNumber = this.myPortNumber * 10 + id;
         /* Initialize the logger. */
