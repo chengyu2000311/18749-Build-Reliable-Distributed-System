@@ -236,7 +236,7 @@ public class LocalFaultDetector {
         int id = Integer.parseInt(args[0]);
         LocalFaultDetector m_localFaultDetector = new LocalFaultDetector(2, id);
         m_localFaultDetector.start();
-        System.out.printf("LocalFault detector LFD1 has been launched at %s:%d\n", myIP, myPortNumber);
+        System.out.printf("LocalFault detector LFD has been launched at %s:%d\n", myIP, myPortNumber);
     }
 
 }

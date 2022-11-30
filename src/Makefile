@@ -11,6 +11,8 @@ rungfd:
 runserver:
 	java com.ds18749.component.Server $(id)
 
+runrm:
+	java com.ds18749.component.ReplicationManager
 
 runclient:
 	java com.ds18749.component.Client $(id)

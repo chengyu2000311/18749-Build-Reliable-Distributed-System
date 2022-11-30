@@ -87,6 +87,7 @@ public class GlobalFaultDetector {
                 /* Parse the message received. */
                 String received = rawStringReceived.toString();
                 /* Answer to either Clients or the LFD. */
+                System.out.println(received);
                 updateState(received);
             }catch (Exception e){
                 e.printStackTrace();
@@ -99,16 +100,38 @@ public class GlobalFaultDetector {
      * update membership based on what is received
      */
     private void updateState(String received) {
+        System.out.println("Start updating");
         int id = Integer.parseInt(String.valueOf(received.charAt(received.length()-1)));
         if (received.contains("add replica")) {
             memberships.add("S" + id);
+            System.out.println(memberships);
             m_Logger.log(Level.INFO, String.format("add GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         } else if (received.contains("delete replica")) {
             memberships.remove("S" + id);
+            System.out.println(memberships);
             m_Logger.log(Level.INFO, String.format("delete GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         }
-
+        sendMemberListToRM(memberships);
     }
+    /**
+     * send the member list to RM
+     */
+    public void sendMemberListToRM(List<String> memberships){
+        System.out.println("Start sending");
+        StringBuilder sb = new StringBuilder();
+        for(String membership : memberships) sb.append(membership.charAt(1));
+        sb.append("#");
+        String msg = sb.toString();
+        m_Logger.log(Level.INFO, String.format("GFD send out membership message to RM: %s", msg));
+        try {
+            Socket m_globalFaultDetectorSocket = new Socket(ReplicationManager.myIP, ReplicationManager.myPortNumber);
+            OutputStream out = m_globalFaultDetectorSocket.getOutputStream();
+            out.write(msg.getBytes());
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * start hearbeat with other LFD
@@ -129,7 +152,6 @@ public class GlobalFaultDetector {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         while (true) {
             try {
                 Thread.sleep(heartBeatFrequency * 1000L);
@@ -182,6 +204,6 @@ public class GlobalFaultDetector {
     public static void main(String[] args) {
         GlobalFaultDetector GDF = new GlobalFaultDetector(2);
         GDF.start();
-        System.out.printf("LocalFault detector LFD1 has been launched at %s:%d\n", myIP, myPortNumber);
+        System.out.printf("GlobalFault detector GFD has been launched at %s:%d\n", myIP, myPortNumber);
     }
 }
