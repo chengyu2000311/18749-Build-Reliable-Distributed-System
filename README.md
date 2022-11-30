@@ -33,3 +33,8 @@
 - Client now only send to S1 by default
 - S1 sends checkpoints to S2 and S3
 - To compile: same as above
+
+## Milestone 4&5
+- Start the ReplicationManager:
+  $ make runrm
+- 
