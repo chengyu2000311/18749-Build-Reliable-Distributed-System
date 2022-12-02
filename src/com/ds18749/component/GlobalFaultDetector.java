@@ -35,7 +35,7 @@ public class GlobalFaultDetector {
     private final List<IpPort> LFDIpPortS = Arrays.asList(
             new IpPort("ece000.ece.local.cmu.edu", 4321),
             new IpPort("ece001.ece.local.cmu.edu", 4322),
-            new IpPort("ece002.ece.local.cmu.edu", 4323)
+            new IpPort("ece003.ece.local.cmu.edu", 4323)
     );
 
     public GlobalFaultDetector(long heartBeatFrequency) {
@@ -45,9 +45,6 @@ public class GlobalFaultDetector {
         this.start();
     }
 
-    /**
-     * Check if timeout occurs
-     */
     private void checkTimeout() {
         while (true) {
             lastHearBeatLock.lock();
@@ -68,9 +65,6 @@ public class GlobalFaultDetector {
         }
     }
 
-    /**
-     * continuing listen to message from other LFD
-     */
     private void listenMessage() {
         while (true) {
             StringBuilder rawStringReceived = new StringBuilder();
@@ -94,44 +88,18 @@ public class GlobalFaultDetector {
         }
     }
 
-    /**
-     * @param received
-     * update membership based on what is received
-     */
     private void updateState(String received) {
         int id = Integer.parseInt(String.valueOf(received.charAt(received.length()-1)));
         if (received.contains("add replica")) {
             memberships.add("S" + id);
-            m_Logger.log(Level.INFO, String.format("add GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
+            m_Logger.log(Level.INFO, String.format("GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         } else if (received.contains("delete replica")) {
             memberships.remove("S" + id);
-            m_Logger.log(Level.INFO, String.format("delete GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
+            m_Logger.log(Level.INFO, String.format("GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         }
-        sendMemberListToRM(memberships);
+
     }
 
-    /**
-     * send the member list to RM
-     */
-    public void sendMemberListToRM(List<String> memberships){
-        System.out.println("Start sending");
-        StringBuilder sb = new StringBuilder();
-        for(String membership : memberships) sb.append(membership.charAt(1));
-        sb.append("#");
-        String msg = sb.toString();
-        m_Logger.log(Level.INFO, String.format("GFD send out membership message to RM: %s", msg));
-        try {
-            Socket m_globalFaultDetectorSocket = new Socket(ReplicationManager.myIP, ReplicationManager.myPortNumber);
-            OutputStream out = m_globalFaultDetectorSocket.getOutputStream();
-            out.write(msg.getBytes());
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * start hearbeat with other LFD
-     */
     private void start() {
         /* Setup timer for sending GFD heartbeat. */
         m_Logger.log(Level.INFO, "GFD: 0 members");
@@ -159,9 +127,6 @@ public class GlobalFaultDetector {
         }
     }
 
-    /**
-     * send heartbeats to all other LFDs
-     */
     private void sendHeartBeat() {
         for (int id=1; id<4; ++id) {
             /* Example: GDB_HEART_BEAT */
@@ -193,7 +158,7 @@ public class GlobalFaultDetector {
                     lastHearBeatLock.unlock();
                 }
             } catch (Exception e) {
-                //    e.printStackTrace();
+//                    e.printStackTrace();
             }
         }
     }

@@ -10,6 +10,8 @@ import java.sql.Timestamp;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.*;
+import java.net.InetSocketAddress;
+import java.net.ConnectException;
 
 public class LocalFaultDetector {
     public static String serverIP = "ece00%d.ece.local.cmu.edu";
@@ -51,7 +53,7 @@ public class LocalFaultDetector {
             InetAddress serverAddress = InetAddress.getByName(myIP);
             this.m_GDBHeartBeat = new ServerSocket(myPortNumber, 10, serverAddress);
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
 
         Thread serverThread = new Thread(this::listenToHeartBeatFromGDB);
@@ -64,13 +66,14 @@ public class LocalFaultDetector {
             try {
                 Thread.sleep(heartBeatFrequency * 1000L);
                 heartBeatWithServer();
-            } catch (Exception e) {
+            } catch(Exception e) {
+
             }
-            serverTimeoutLock.lock();
-            if (serverTimeout) {
-                break;
-            }
-            serverTimeoutLock.unlock();
+            // serverTimeoutLock.lock();
+            // if (serverTimeout) {
+            //     break;
+            // }
+            // serverTimeoutLock.unlock();
         }
     }
 
@@ -81,15 +84,13 @@ public class LocalFaultDetector {
         while (true) {
             lastHeartBeatLock.lock();
             Timestamp timeoutStamp = new Timestamp(System.currentTimeMillis() - timeout);
-            if (lastHeartBeat != null && lastHeartBeat.before(timeoutStamp)) {
-                serverTimeoutLock.lock();
+            if (lastHeartBeat != null && lastHeartBeat.before(timeoutStamp) && !serverTimeout) {
+                // serverTimeoutLock.lock();
                 serverTimeout = true;
-                serverTimeoutLock.unlock();
+                // serverTimeoutLock.unlock();
                 m_Logger.log(Level.SEVERE, "TIMEOUT. LFD{0} does not hear Heart Beat Answer from the Server{0}. Stop sending heart beats...", id);
                 deregisterMember();
                 m_Logger.log(Level.INFO, String.format("Relauch the server in a second"));
-                break;
-
             }
             lastHeartBeatLock.unlock();
         }
@@ -104,7 +105,10 @@ public class LocalFaultDetector {
         /* Log to console on the heartbeat message sent. */
         m_Logger.log(Level.INFO, String.format("LFD%d send out heart beat message to Server%d: %s", id, id, msg));
         /* Open socket and write to the server. */
-        Socket m_localFaultDetectorSocket = new Socket(serverIP, serverPortNumber);
+        Socket m_localFaultDetectorSocket = new Socket();
+
+        m_localFaultDetectorSocket.connect(new InetSocketAddress(serverIP, serverPortNumber), 1000);
+        // Socket m_localFaultDetectorSocket = new Socket(serverIP, serverPortNumber);
         OutputStream out = m_localFaultDetectorSocket.getOutputStream();
         out.write(msg.getBytes());
 
@@ -122,14 +126,18 @@ public class LocalFaultDetector {
         String receivedMessage = rawStringReceived.toString();
         if (receivedMessage.startsWith(String.format("Server%d_%s", id, Server.eMessageType.HEART_BEAT_ANSWER.name()))) {
             m_Logger.log(Level.INFO, String.format("Heartbeat answered by from Server%d: %s\n", id, receivedMessage));
+            if (!serverAlive) {
+                serverAlive = true;
+                serverTimeout = false;
+                registerMember();
+            }
+
             lastHeartBeatLock.lock();
             lastHeartBeat = new Timestamp(System.currentTimeMillis());
             lastHeartBeatLock.unlock();
 
-            if (!serverAlive) {
-                serverAlive = true;
-                registerMember();
-            }
+
+
         }
 
     }
@@ -150,7 +158,7 @@ public class LocalFaultDetector {
                 rawStringReceived.append((char) c);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
 
         System.out.println(rawStringReceived.toString());
@@ -163,7 +171,7 @@ public class LocalFaultDetector {
                 out.write(serverReplyMessage.getBytes());
                 m_Logger.log(Level.INFO, String.format("Heart Beat Answer sent to GDF from LDF%d: %s\n", id, serverReplyMessage));
             } catch (Exception e) {
-                e.printStackTrace();
+                // e.printStackTrace();
             }
         }
     }
@@ -178,7 +186,7 @@ public class LocalFaultDetector {
             try {
                 out.write(String.format("%s %d%c", GlobalFaultDetector.eMessageType.GDB_HEART_BEAT_ANSWER, id, Server.END_CHAR).getBytes());
             } catch (IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
             }
         }
     }
@@ -198,7 +206,7 @@ public class LocalFaultDetector {
             OutputStream out = m_globalFaultDetectorSocket.getOutputStream();
             out.write(msg.getBytes());
         } catch (Exception e){
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -209,8 +217,9 @@ public class LocalFaultDetector {
         /* Example: LFD1_HEART_BEAT */
         String msg = String.format("LFD%d: delete replica S%d%c", id, id, Server.END_CHAR);
         /* Log to console on the heartbeat message sent. */
-        m_Logger.log(Level.INFO, String.format("LFD%d send out register message to GDB: %s", id, msg));
-
+        m_Logger.log(Level.INFO, String.format("LFD%d send out deregister message to GDB: %s", id, msg));
+        serverAlive = false;
+        m_Logger.log(Level.INFO, "deregister " + serverAlive);
         /* Open socket and write to the server. */
         try {
             Socket m_globalFaultDetectorSocket = new Socket(GlobalFaultDetector.myIP, GlobalFaultDetector.myPortNumber);
