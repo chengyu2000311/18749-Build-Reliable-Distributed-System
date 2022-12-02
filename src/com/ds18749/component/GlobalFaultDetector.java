@@ -107,7 +107,26 @@ public class GlobalFaultDetector {
             memberships.remove("S" + id);
             m_Logger.log(Level.INFO, String.format("delete GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         }
+        sendMemberListToRM(memberships);
+    }
 
+    /**
+     * send the member list to RM
+     */
+    public void sendMemberListToRM(List<String> memberships){
+        System.out.println("Start sending");
+        StringBuilder sb = new StringBuilder();
+        for(String membership : memberships) sb.append(membership.charAt(1));
+        sb.append("#");
+        String msg = sb.toString();
+        m_Logger.log(Level.INFO, String.format("GFD send out membership message to RM: %s", msg));
+        try {
+            Socket m_globalFaultDetectorSocket = new Socket(ReplicationManager.myIP, ReplicationManager.myPortNumber);
+            OutputStream out = m_globalFaultDetectorSocket.getOutputStream();
+            out.write(msg.getBytes());
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
