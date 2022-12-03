@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 public class GlobalFaultDetector {
     public static final String myIP = "ece003.ece.local.cmu.edu";
-    public static final int myPortNumber = 4311;
+    public static final int myPortNumber = 4911;
 
     private ServerSocket m_ServerSocket;
     private final long heartBeatFrequency;
@@ -100,15 +100,15 @@ public class GlobalFaultDetector {
      * update membership based on what is received
      */
     private void updateState(String received) {
-        System.out.println("Start updating");
+//        System.out.println("Start updating");
         int id = Integer.parseInt(String.valueOf(received.charAt(received.length()-1)));
         if (received.contains("add replica")) {
             memberships.add("S" + id);
-            System.out.println(memberships);
+//            System.out.println(memberships);
             m_Logger.log(Level.INFO, String.format("add GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         } else if (received.contains("delete replica")) {
             memberships.remove("S" + id);
-            System.out.println(memberships);
+//            System.out.println(memberships);
             m_Logger.log(Level.INFO, String.format("delete GDF: %d members %s", memberships.size(), String.join(" ", memberships)));
         }
         sendMemberListToRM(memberships);

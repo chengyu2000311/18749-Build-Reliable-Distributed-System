@@ -101,18 +101,19 @@ public class Server{
     }
 
     private void sendCheckpoint() {
-        for (int id = 2; id < 4; id++) {
+        for (int i = 1; i < 4; i++) {
+            if(id == i) continue;
             try {
                 serverStateLock.lock();
                 String checkpointMsg = String.format("CHECKPOINT STATE %s CHECKPOINT_COUNT %d%c", this.m_eServerState.name(), this.checkpointCount, Server.END_CHAR);
                 serverStateLock.unlock();
 
-                IpPort ipPort = ServerIpPortS.get(id-1);
+                IpPort ipPort = ServerIpPortS.get(i-1);
                 Socket replicaSocket = new Socket(ipPort.IPAddress(), ipPort.portNumber());
                 OutputStream out = replicaSocket.getOutputStream();
                 out.write(checkpointMsg.getBytes());
                 /* Log to console on the checkpoint message sent. */
-                m_Logger.log(Level.INFO, String.format("Primary replica send out checkpoint message to S%d: %s", id, checkpointMsg));
+                m_Logger.log(Level.INFO, String.format("Primary replica send out checkpoint message to S%d: %s", i, checkpointMsg));
             } catch (Exception e) {
 
             }
@@ -196,6 +197,15 @@ public class Server{
                     serverReplyMessage = String.format("Server%d_%s %d%c", id, eMessageType.MESSAGE_ANSWER.name(), id, Server.END_CHAR);
                     m_Logger.log(Level.INFO, String.format("Message reply sent to C1 from S%d: %s\n", id, serverReplyMessage));
                     serverStateLock.unlock();
+                    if(isPrimary == false){
+                        isPrimary = true;
+//                        System.out.println("I am the primary server");
+                        m_Logger.log(Level.INFO, "current server is the primary server!");
+                        Thread checkpoint_thread = new Thread(this::sendCheckpointLoop);
+                        checkpoint_thread.start();
+                    }else{
+                        m_Logger.log(Level.INFO, "isPrimary: true");
+                    }
                 } else if (receivedMessageType == eMessageType.CLIENT2_DATA) {
                     /* Change server state to YELLOW. */
                     serverStateLock.lock();
@@ -205,6 +215,15 @@ public class Server{
                     serverReplyMessage = String.format("Server%d_%s %d%c", id, eMessageType.MESSAGE_ANSWER.name(), id, Server.END_CHAR);
                     m_Logger.log(Level.INFO, String.format("Message reply sent to C2 from S%d: %s\n", id, serverReplyMessage));
                     serverStateLock.unlock();
+                    if(isPrimary == false){
+                        isPrimary = true;
+//                        System.out.println("I am the primary server");
+                        m_Logger.log(Level.INFO, "current server is the primary server!");
+                        Thread checkpoint_thread = new Thread(this::sendCheckpointLoop);
+                        checkpoint_thread.start();
+                    }else{
+                        m_Logger.log(Level.INFO, "isPrimary: true");
+                    }
                 } else if (receivedMessageType == eMessageType.CLIENT3_DATA) {
                     /* Change server state to BLUE. */
                     serverStateLock.lock();
@@ -214,6 +233,15 @@ public class Server{
                     serverReplyMessage = String.format("Server%d_%s %d%c", id, eMessageType.HEART_BEAT_ANSWER.name(), id, Server.END_CHAR); ;
                     m_Logger.log(Level.INFO, String.format("Message reply sent to C3 from S%d: %s\n", id, serverReplyMessage));
                     serverStateLock.unlock();
+                    if(isPrimary == false){
+                        isPrimary = true;
+//                        System.out.println("I am the primary server");
+                        m_Logger.log(Level.INFO, "current server is the primary server!");
+                        Thread checkpoint_thread = new Thread(this::sendCheckpointLoop);
+                        checkpoint_thread.start();
+                    }else{
+                        m_Logger.log(Level.INFO, "isPrimary: true");
+                    }
                 }
                 /* Write the server reply message to outstream. */
                 out.write(serverReplyMessage.getBytes());
@@ -240,12 +268,12 @@ public class Server{
         int id = Integer.parseInt(args[0]);
         System.out.printf("Server replica S%d has been launched at %s:%d\n\n", id, String.format(myIP, id), myPortNumber * 10 + id);
         Server m_server;
-        if (id == 1) {
-            m_server = new Server(5, myIP, myPortNumber, id, true);
-        } else {
-            m_server = new Server(5, myIP, myPortNumber, id, false);
-        }
-        
+//        if (id == 1) {
+//            m_server = new Server(5, myIP, myPortNumber, id, true);
+//        } else {
+//            m_server = new Server(5, myIP, myPortNumber, id, false);
+//        }
+        m_server = new Server(5, myIP, myPortNumber, id, false);
         m_server.startService();
     }
 

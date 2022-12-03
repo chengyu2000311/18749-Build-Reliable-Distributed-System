@@ -6,16 +6,23 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.*;
 
 
 public class Client{
     public static final String serverIP = "ece003.ece.local.cmu.edu";
     public static final int serverPortNumber = 4321;
+    private final Lock timeLock = new ReentrantLock();
+//    private final Lock serverTimeoutLock = new ReentrantLock();
+    private static Timestamp lastTimeReceive;
+    private static long timeout = 4 * 1000L;
     public static int clientStateCounter = 0;
-
+    private static int serverID = 1;
     private final int clientId; 
     private Logger m_Logger;
     private int counter = 0;
@@ -40,9 +47,9 @@ public class Client{
     public void startSendingMessageToServer() {
         while (true) {
             clientStateCounter += 1;
-            boolean hasReceived = false;
+//            boolean hasReceived = false;
             // for (int serverID=1; serverID<4; ++serverID) {
-            int serverID = 1;
+//            int serverID = curServerID;
             String messageString = "CLIENT" + clientId + "_DATA" + " " + counter + Server.END_CHAR;
             counter += 1;
             IpPort serverIpPort = ServerIpPorts.get(serverID-1);
@@ -60,7 +67,8 @@ public class Client{
 
 
             /* Listen for response from the server. */
-            hasReceived = listenToMessageResponseFromServer(serverID, hasReceived);
+//            hasReceived = listenToMessageResponseFromServer(serverID, hasReceived);
+            listenToMessageResponseFromServer();
 
 
 
@@ -74,10 +82,21 @@ public class Client{
         }
     }
 
+    public void start(){
+        Thread clientThread = new Thread(this::startSendingMessageToServer);
+        clientThread.start();
+
+//        Thread client2Thread = new Thread(this::listenToMessageResponseFromServer);
+//        client2Thread.start();
+
+        Thread timeoutThread = new Thread(this::checkTimeout);
+        timeoutThread.start();
+    }
+
     /**
      * Listen to server's reponse to the message we (the client) send.
      */
-    private boolean listenToMessageResponseFromServer(int serverID, boolean hasReceived) {
+    private void listenToMessageResponseFromServer() {
         StringBuilder rawStringReceived = new StringBuilder();
 
         // Accept the socket and print received message from clients.
@@ -96,17 +115,49 @@ public class Client{
             String receivedMessage = rawStringReceived.toString();
             String[] received = receivedMessage.split(" ", 2);
 
-            if (isMessageRespondFromServer(received[0]) && !hasReceived) {
-                m_Logger.log(Level.INFO, String.format("Received message answered by Server1: %s\n", receivedMessage));
-            } else {
-                m_Logger.log(Level.INFO, "Discard Duplicate Response");
-            }
+//            timeLock.lock();
+            // record the last receiving time
+            lastTimeReceive = new Timestamp(System.currentTimeMillis());
+//            m_Logger.log(Level.INFO, String.format("Pre: Received message answered by Server%d: %s\n", serverID, receivedMessage));
+//            timeLock.unlock();
+
+            m_Logger.log(Level.INFO, String.format("Received message answered by Server%d: %s\n", serverID, receivedMessage));
+//            if (isMessageRespondFromServer(received[0])) {
+//                m_Logger.log(Level.INFO, String.format("Received message answered by Server%d: %s\n", serverID, receivedMessage));
+//            } else {
+//                m_Logger.log(Level.INFO, "Discard Duplicate Response");
+//            }
         } catch (Exception e) {
             if (!(e instanceof ConnectException)) {
                 e.printStackTrace();
             }
         }
-        return true;
+//        return true;
+    }
+
+    private void checkTimeout() {
+        while (true) {
+            boolean flag = false;
+            timeLock.lock();
+            Timestamp timeoutStamp = new Timestamp(System.currentTimeMillis() - timeout);
+            if (lastTimeReceive != null && lastTimeReceive.before(timeoutStamp)) {
+//                serverTimeoutLock.lock();
+                serverID += 1;
+                if(serverID == 4) serverID = 1;
+                flag = true;
+//                serverTimeoutLock.unlock();
+//                m_Logger.log(Level.SEVERE, "TIMEOUT");
+                System.out.println("TIMEOUT and current primary server is S" + serverID);
+//                break;
+            }
+            timeLock.unlock();
+            if (flag) break;
+//            try {
+//                Thread.sleep(3000L);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+        }
     }
 
     /**
@@ -128,6 +179,7 @@ public class Client{
         int clientId = Integer.parseInt(args[0]);
         Client m_client = new Client(clientId);
         System.out.printf("Client%d has been launched at %s:%d\n", clientId, serverIP, serverPortNumber);
-        m_client.startSendingMessageToServer();
+//        m_client.startSendingMessageToServer();
+        m_client.start();
     }
 }

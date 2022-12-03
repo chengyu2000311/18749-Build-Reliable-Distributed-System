@@ -12,7 +12,7 @@ public class ReplicationManager {
     public static final String myIP = "ece003.ece.local.cmu.edu";
 //    public static final String myIP = "0.0.0.0";
 
-    public static final int myPortNumber = 4412;
+    public static final int myPortNumber = 4812;
 
     private final List<String> memberships;
 
@@ -71,7 +71,7 @@ public class ReplicationManager {
 
     public static void main(String[] args) {
         ReplicationManager RM = new ReplicationManager();
-        RM.start();
         System.out.printf("RM has been launched at %s:%d\n", myIP, myPortNumber);
+        RM.start();
     }
 }
